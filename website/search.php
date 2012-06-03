@@ -1009,11 +1009,14 @@
 					$sSQL .= "get_name_by_language(name, ARRAY['ref']) as ref,";
 					$sSQL .= "avg(ST_X(ST_Centroid(geometry))) as lon,avg(ST_Y(ST_Centroid(geometry))) as lat, ";
 //					$sSQL .= $sOrderSQL." as porder, ";
-					$sSQL .= "coalesce(importance,0.9-(rank_search::float/30)) as importance ";
+					$sSQL .= "coalesce(importance,0.9-(rank_search::float/30)) ";
+					if ($sViewboxSmallSQL) $sSQL .= " * case when ST_Contains($sViewboxSmallSQL, centroid) THEN 1 ELSE 0.5 END";
+					if ($sViewboxLargeSQL) $sSQL .= " * case when ST_Contains($sViewboxLargeSQL, centroid) THEN 1 ELSE 0.5 END";
+					$sSQL .= " as importance ";
 					$sSQL .= "from placex where place_id in ($sPlaceIDs) ";
 					$sSQL .= "and placex.rank_address between $iMinAddressRank and $iMaxAddressRank ";
 					$sSQL .= "and linked_place_id is null ";
-					$sSQL .= "group by osm_type,osm_id,class,type,admin_level,rank_search,rank_address,country_code,importance";
+					$sSQL .= "group by osm_type,osm_id,class,type,admin_level,rank_search,rank_address,country_code,importance,centroid";
 					if (!$bDeDupe) $sSQL .= ",place_id";
 					$sSQL .= ",get_address_by_language(place_id, $sLanguagePrefArraySQL) ";
 					$sSQL .= ",get_name_by_language(name, $sLanguagePrefArraySQL) ";
